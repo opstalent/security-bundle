@@ -1,18 +1,15 @@
 <?php
 
+namespace Opstalent\SecurityBundle\EventSubscriber;
 
-namespace Opstalent\SecurityBundle\EventListener;
-
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 
-
-class RouteMatchListener
+class KernelControllerSubscriber implements EventSubscriberInterface
 {
     protected $router;
     protected $tokenStorage;
@@ -23,11 +20,22 @@ class RouteMatchListener
         $this->tokenStorage = $tokenStorage;
     }
 
-    public function onKernelRequest(FilterControllerEvent $event)
+
+    public static function getSubscribedEvents()
     {
+        return [
+            KernelEvents::CONTROLLER => [
+                ['onRouteMatch', 9999]
+            ]
+        ];
+    }
+
+    public function onRouteMatch(FilterControllerEvent $event)
+    {
+        /** @var Request $request */
         $request = $event->getRequest();
         $route = $this->router->getRouteCollection()->get($request->attributes->get('_route'));
-        if($route && is_array($options = $route->getOption('security'))) {
+        if($route && is_array($options = $route->getOption('security')) && array_key_exists('secure', $options) && $options['secure']) {
             if(!$this->canAccess($options)) {
                 throw new \Exception("Forbidden",403)  ;
             }
@@ -41,5 +49,4 @@ class RouteMatchListener
         }
 
     }
-
 }

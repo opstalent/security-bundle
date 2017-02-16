@@ -1,8 +1,16 @@
 services:
   kernel.event_listener.route_match:
-    class: Opstalent\SecurityBundle\EventListener\RouteMatchListener
+    class: Opstalent\SecurityBundle\EventSubscriber\KernelControllerSubscriber
     arguments:
       - "@router"
       - "@security.token_storage"
     tags:
-      - { name: kernel.event_listener, event: kernel.controller, method: onKernelRequest, priority: 99 }
+      - { name: kernel.event_subscriber }
+
+  kernel.event_listener.repository:
+    class: Opstalent\SecurityBundle\EventSubscriber\RepositorySubscriber
+    arguments:
+      - "@router"
+      - "@security.token_storage"
+    tags:
+      - {name: kernel.event_listener, event:before.search.by.filter, method:beforeSearchByFilter}
