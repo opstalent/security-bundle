@@ -44,9 +44,14 @@ class KernelControllerSubscriber implements EventSubscriberInterface
 
     protected function canAccess(array $options):bool
     {
-        if(array_key_exists('roles', $options) && !empty($options['roles']) > 0 && $this->tokenStorage->getToken() && $user = $this->tokenStorage->getToken()->getUser()) {
+        if(
+            array_key_exists('roles', $options) &&
+            !empty($options['roles']) &&
+            $this->tokenStorage->getToken() &&
+            $user = $this->tokenStorage->getToken()->getUser()
+        ) {
             return !empty(array_intersect($options['roles'],$user->getRoles()));
         }
-
+        return true;
     }
 }
