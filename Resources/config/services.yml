@@ -14,3 +14,4 @@ services:
       - "@security.token_storage"
     tags:
       - {name: kernel.event_listener, event:before.search.by.filter, method:beforeSearchByFilter}
+      - {name: kernel.event_listener, event:before.persist, method:beforePersist}

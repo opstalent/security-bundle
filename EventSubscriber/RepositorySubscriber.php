@@ -15,7 +15,9 @@ use Symfony\Component\Routing\Route;
 
 class RepositorySubscriber implements EventSubscriberInterface
 {
-    const EVENT = "before.search.by.filter";
+    const BEFORE_SEARCH_BY_FILTER = "before.search.by.filter";
+    const BEFORE_PERSIST = "before.persist";
+
     protected $router;
     protected $tokenStorage;
 
@@ -29,18 +31,31 @@ class RepositorySubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            self::EVENT => 'beforeSearchByFilter'
+            self::BEFORE_SEARCH_BY_FILTER => 'beforeSearchByFilter',
+            self::BEFORE_PERSIST => 'beforePersist',
         ];
     }
 
     public function beforeSearchByFilter(RepositoryEvent $event)
     {
         $security = $this->getSecurity();
-        if($security && array_key_exists('events',$security) && array_key_exists(self::EVENT,$security['events'])) {
-            $callback = $security['events'][self::EVENT];
+        if($security && array_key_exists('events',$security) && array_key_exists(self::BEFORE_SEARCH_BY_FILTER,$security['events'])) {
+            $callback = $security['events'][self::BEFORE_SEARCH_BY_FILTER];
             $event->getRepository()->$callback($this->tokenStorage->getToken()->getUser());
         }
     }
+
+    public function beforePersist(RepositoryEvent $event)
+    {
+        dump($event);
+        $security = $this->getSecurity();
+        dump($security);
+        if($security && array_key_exists('events',$security) && array_key_exists(self::BEFORE_PERSIST,$security['events'])) {
+            $callback = $security['events'][self::BEFORE_PERSIST];
+            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
+        }
+    }
+
 
     private function currentRoute(RouteCollection $routes, string $path, string $method):Route
     {
@@ -58,4 +73,5 @@ class RepositorySubscriber implements EventSubscriberInterface
         $route = $this->currentRoute($this->router->getRouteCollection(), $path, $method);
         return $route->getOption('security');
     }
+
 }

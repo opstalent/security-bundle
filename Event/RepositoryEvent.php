@@ -8,10 +8,12 @@ use Symfony\Component\EventDispatcher\Event;
 class RepositoryEvent extends Event
 {
     protected $repository;
+    protected $data;
 
-    public function __construct(string $name, BaseRepository &$repository)
+    public function __construct(string $name, BaseRepository &$repository, $data = null)
     {
         $this->repository = $repository;
+        $this->data = $data;
     }
 
     public function getRepository()
@@ -19,5 +21,9 @@ class RepositoryEvent extends Event
         return $this->repository;
     }
 
+    public function getData()
+    {
+        return $this->data;
+    }
 
 }
