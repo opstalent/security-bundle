@@ -47,9 +47,7 @@ class RepositorySubscriber implements EventSubscriberInterface
 
     public function beforePersist(RepositoryEvent $event)
     {
-        dump($event);
         $security = $this->getSecurity();
-        dump($security);
         if($security && array_key_exists('events',$security) && array_key_exists(self::BEFORE_PERSIST,$security['events'])) {
             $callback = $security['events'][self::BEFORE_PERSIST];
             $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
@@ -61,7 +59,7 @@ class RepositorySubscriber implements EventSubscriberInterface
     {
         foreach ($routes as $route)
         {
-            if($route->getPath() === $path && $route->getMethods()[0] === $method) return $route;
+            if($route->getPath() === $this->processPath($path) && $route->getMethods()[0] === $method) return $route;
         }
         return $routes->get('root');
     }
@@ -74,4 +72,12 @@ class RepositorySubscriber implements EventSubscriberInterface
         return $route->getOption('security');
     }
 
+    private function processPath($path)
+    {
+        $parts = explode("/", $path);
+        if (intval(end($parts)) != 0) {
+            return str_replace(end($parts),"{id}", $path);
+        }
+        return "/";
+    }
 }
