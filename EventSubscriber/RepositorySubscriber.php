@@ -78,6 +78,6 @@ class RepositorySubscriber implements EventSubscriberInterface
         if (intval(end($parts)) != 0) {
             return str_replace(end($parts),"{id}", $path);
         }
-        return "/";
+        return "";
     }
 }
