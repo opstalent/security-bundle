@@ -35,23 +35,26 @@ class KernelControllerSubscriber implements EventSubscriberInterface
         /** @var Request $request */
         $request = $event->getRequest();
         $route = $this->router->getRouteCollection()->get($request->attributes->get('_route'));
-        if($route && is_array($options = $route->getOption('security')) && array_key_exists('secure', $options) && $options['secure']) {
-            if(!$this->canAccess($options)) {
-                throw new \Exception("Forbidden",403)  ;
+        if ($route && is_array($options = $route->getOption('security')) && array_key_exists('secure', $options) && $options['secure']) {
+            if (!$this->canAccess($options)) {
+                throw new \Exception("Forbidden", 403);
             }
         }
     }
 
     protected function canAccess(array $options):bool
     {
-        if(
-            array_key_exists('roles', $options) &&
-            !empty($options['roles']) &&
+        if (!array_key_exists('roles', $options) ||
+            empty($options['roles'])
+        ) {
+            return true;
+        }
+        if (
             $this->tokenStorage->getToken() &&
             $user = $this->tokenStorage->getToken()->getUser()
         ) {
-            return !empty(array_intersect($options['roles'],$user->getRoles()));
+            return !empty(array_intersect($options['roles'], $user->getRoles()));
         }
-        return true;
+        return false;
     }
 }
