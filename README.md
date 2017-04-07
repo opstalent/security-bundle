@@ -1,4 +1,4 @@
-# Security-bundle 
+# Security-bundle [![Build Status](https://travis-ci.org/opstalent/security-bundle.svg?branch=master)](https://travis-ci.org/opstalent/security-bundle)
 
 This bundle require api-bundle to work.
 
