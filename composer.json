@@ -21,7 +21,7 @@
     "MIT"
   ],
   "require" : {
-    "opstalent/api-bundle": "dev-master"
+    "opstalent/api-bundle": "master"
   },
   "suggest": {
   },
