@@ -44,6 +44,7 @@ class KernelControllerSubscriber implements EventSubscriberInterface
 
     protected function canAccess(array $options):bool
     {
+
         if (!array_key_exists('roles', $options) ||
             empty($options['roles'])
         ) {
@@ -55,6 +56,7 @@ class KernelControllerSubscriber implements EventSubscriberInterface
         ) {
             return !empty(array_intersect($options['roles'], $user->getRoles()));
         }
+
         return false;
     }
 }
