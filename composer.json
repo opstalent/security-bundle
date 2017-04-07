@@ -21,7 +21,6 @@
     "MIT"
   ],
   "require" : {
-    "opstalent/api-bundle": "*"
   },
   "suggest": {
   },
