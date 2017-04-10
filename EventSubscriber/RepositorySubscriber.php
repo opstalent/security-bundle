@@ -59,7 +59,7 @@ class RepositorySubscriber implements EventSubscriberInterface
     {
         foreach ($routes as $route)
         {
-            if($route->getPath() === $this->processPath($path) && $route->getMethods()[0] === $method) return $route;
+            if($route->getPath() === $this->processPath($path) && $route->getMethods() == [$method]) return $route;
         }
         return $routes->get('root');
     }
@@ -75,9 +75,9 @@ class RepositorySubscriber implements EventSubscriberInterface
     private function processPath($path)
     {
         $parts = explode("/", $path);
-        if (intval(end($parts)) != 0) {
+        if (count($parts) > 1 && intval(end($parts)) != 0) {
             return str_replace(end($parts),"{id}", $path);
         }
-        return "";
+        return $path;
     }
 }
