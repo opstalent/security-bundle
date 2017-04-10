@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Role\RoleInterface;
 
 class KernelControllerSubscriber implements EventSubscriberInterface
 {
@@ -50,13 +51,18 @@ class KernelControllerSubscriber implements EventSubscriberInterface
         ) {
             return true;
         }
+
         if (
-            $this->tokenStorage->getToken() &&
-            $user = $this->tokenStorage->getToken()->getUser()
+            $this->tokenStorage->getToken()
         ) {
-            return !empty(array_intersect($options['roles'], $user->getRoles()));
+            return !empty(array_intersect($options['roles'], array_map([$this, "getRole"], $this->tokenStorage->getToken()->getRoles())));
         }
 
         return false;
+    }
+
+    public function getRole(RoleInterface $value)
+    {
+        return $value->getRole();
     }
 }
