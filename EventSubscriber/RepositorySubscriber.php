@@ -17,6 +17,7 @@ class RepositorySubscriber implements EventSubscriberInterface
 {
     const BEFORE_SEARCH_BY_FILTER = "before.search.by.filter";
     const BEFORE_PERSIST = "before.persist";
+    const BEFORE_REMOVE = "before.remove";
 
     protected $router;
     protected $tokenStorage;
@@ -33,13 +34,14 @@ class RepositorySubscriber implements EventSubscriberInterface
         return [
             self::BEFORE_SEARCH_BY_FILTER => 'beforeSearchByFilter',
             self::BEFORE_PERSIST => 'beforePersist',
+            self::BEFORE_REMOVE => 'beforeRemove',
         ];
     }
 
     public function beforeSearchByFilter(RepositoryEvent $event)
     {
         $security = $this->getSecurity();
-        if($security && array_key_exists('events',$security) && array_key_exists(self::BEFORE_SEARCH_BY_FILTER,$security['events'])) {
+        if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_SEARCH_BY_FILTER, $security['events'])) {
             $callback = $security['events'][self::BEFORE_SEARCH_BY_FILTER];
             $event->getRepository()->$callback($this->tokenStorage->getToken()->getUser());
         }
@@ -48,8 +50,17 @@ class RepositorySubscriber implements EventSubscriberInterface
     public function beforePersist(RepositoryEvent $event)
     {
         $security = $this->getSecurity();
-        if($security && array_key_exists('events',$security) && array_key_exists(self::BEFORE_PERSIST,$security['events'])) {
+        if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_PERSIST, $security['events'])) {
             $callback = $security['events'][self::BEFORE_PERSIST];
+            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
+        }
+    }
+
+    public function beforeRemove(RepositoryEvent $event)
+    {
+        $security = $this->getSecurity();
+        if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_REMOVE, $security['events'])) {
+            $callback = $security['events'][self::BEFORE_REMOVE];
             $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
         }
     }
@@ -57,9 +68,8 @@ class RepositorySubscriber implements EventSubscriberInterface
 
     private function currentRoute(RouteCollection $routes, string $path, string $method):Route
     {
-        foreach ($routes as $route)
-        {
-            if($route->getPath() === $this->processPath($path) && $route->getMethods() == [$method]) return $route;
+        foreach ($routes as $route) {
+            if ($route->getPath() === $this->processPath($path) && $route->getMethods() == [$method]) return $route;
         }
         return $routes->get('root');
     }
@@ -76,7 +86,7 @@ class RepositorySubscriber implements EventSubscriberInterface
     {
         $parts = explode("/", $path);
         if (count($parts) > 1 && intval(end($parts)) != 0) {
-            return str_replace(end($parts),"{id}", $path);
+            return str_replace(end($parts), "{id}", $path);
         }
         return $path;
     }
