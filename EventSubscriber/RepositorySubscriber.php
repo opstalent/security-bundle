@@ -17,6 +17,7 @@ class RepositorySubscriber implements EventSubscriberInterface
 {
     const BEFORE_SEARCH_BY_FILTER = "before.search.by.filter";
     const BEFORE_PERSIST = "before.persist";
+    const AFTER_PERSIST = "after.persist";
     const BEFORE_REMOVE = "before.remove";
 
     protected $router;
@@ -34,6 +35,7 @@ class RepositorySubscriber implements EventSubscriberInterface
         return [
             self::BEFORE_SEARCH_BY_FILTER => 'beforeSearchByFilter',
             self::BEFORE_PERSIST => 'beforePersist',
+            self::AFTER_PERSIST => 'afterPersist',
             self::BEFORE_REMOVE => 'beforeRemove',
         ];
     }
@@ -52,6 +54,15 @@ class RepositorySubscriber implements EventSubscriberInterface
         $security = $this->getSecurity();
         if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_PERSIST, $security['events'])) {
             $callback = $security['events'][self::BEFORE_PERSIST];
+            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
+        }
+    }
+
+    public function afterPersist(RepositoryEvent $event)
+    {
+        $security = $this->getSecurity();
+        if ($security && array_key_exists('events', $security) && array_key_exists(self::AFTER_PERSIST, $security['events'])) {
+            $callback = $security['events'][self::AFTER_PERSIST];
             $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
         }
     }

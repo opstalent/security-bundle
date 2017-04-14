@@ -15,4 +15,5 @@ services:
     tags:
       - {name: kernel.event_listener, event:before.search.by.filter, method:beforeSearchByFilter}
       - {name: kernel.event_listener, event:before.persist, method:beforePersist}
+      - {name: kernel.event_listener, event:after.persist, method:afterPersist}
       - {name: kernel.event_listener, event:before.remove, method:beforeRemove}
