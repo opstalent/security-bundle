@@ -61,7 +61,7 @@ class RepositorySubscriber implements EventSubscriberInterface
         $security = $this->getSecurity();
         if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_REMOVE, $security['events'])) {
             $callback = $security['events'][self::BEFORE_REMOVE];
-            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
+            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser(), $event->getParams());
         }
     }
 

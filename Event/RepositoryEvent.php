@@ -9,11 +9,13 @@ class RepositoryEvent extends Event
 {
     protected $repository;
     protected $data;
+    protected $params;
 
-    public function __construct(string $name, BaseRepository &$repository, $data = null)
+    public function __construct(string $name, BaseRepository &$repository, $data = null, $params=[])
     {
         $this->repository = $repository;
         $this->data = $data;
+        $this->params = $params;
     }
 
     public function getRepository()
@@ -26,4 +28,8 @@ class RepositoryEvent extends Event
         return $this->data;
     }
 
+    public function getParams()
+    {
+        return $this->params;
+    }
 }
