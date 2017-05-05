@@ -2,8 +2,9 @@
 
 namespace Opstalent\SecurityBundle\EventSubscriber;
 
+use Opstalent\ApiBundle\Event\RepositoryEvents;
 use Opstalent\ApiBundle\Repository\BaseRepository;
-use Opstalent\SecurityBundle\Event\RepositoryEvent;
+use Opstalent\ApiBundle\Event\RepositoryEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
@@ -15,11 +16,6 @@ use Symfony\Component\Routing\Route;
 
 class RepositorySubscriber implements EventSubscriberInterface
 {
-    const BEFORE_SEARCH_BY_FILTER = "before.search.by.filter";
-    const BEFORE_PERSIST = "before.persist";
-    const AFTER_PERSIST = "after.persist";
-    const BEFORE_REMOVE = "before.remove";
-
     protected $router;
     protected $tokenStorage;
 
@@ -33,49 +29,38 @@ class RepositorySubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            self::BEFORE_SEARCH_BY_FILTER => 'beforeSearchByFilter',
-            self::BEFORE_PERSIST => 'beforePersist',
-            self::AFTER_PERSIST => 'afterPersist',
-            self::BEFORE_REMOVE => 'beforeRemove',
+            RepositoryEvents::BEFORE_SEARCH_BY_FILTER => ['searchEventListener', 255],
+            RepositoryEvents::BEFORE_PERSIST => ['unitOfWorkEventListener', 255],
+            RepositoryEvents::AFTER_PERSIST => ['unitOfWorkEventListener', 255],
+            RepositoryEvents::BEFORE_REMOVE => ['unitOfWorkEventListener', 255],
         ];
     }
 
-    public function beforeSearchByFilter(RepositoryEvent $event)
+    public function searchEventListener(RepositoryEvent $event)
     {
         $security = $this->getSecurity();
-        if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_SEARCH_BY_FILTER, $security['events'])) {
-            $callback = $security['events'][self::BEFORE_SEARCH_BY_FILTER];
-            $event->getRepository()->$callback($this->tokenStorage->getToken()->getUser());
+        if (
+            $security
+            && array_key_exists('events', $security)
+            && array_key_exists(RepositoryEvents::BEFORE_SEARCH_BY_FILTER, $security['events'])
+        ) {
+            $callback = $security['events'][RepositoryEvents::BEFORE_SEARCH_BY_FILTER];
+            call_user_func([$event->getRepository(), $callback], $this->tokenStorage->getToken()->getUser());
         }
     }
 
-    public function beforePersist(RepositoryEvent $event)
+    public function unitOfWorkEventListener(RepositoryEvent $event)
     {
         $security = $this->getSecurity();
-        if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_PERSIST, $security['events'])) {
-            $callback = $security['events'][self::BEFORE_PERSIST];
-            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
+        if ($security && array_key_exists('events', $security) && array_key_exists($event->getName(), $security['events'])) {
+            $callback = $security['events'][$event->getName()];
+            call_user_func(
+                [$event->getRepository(), $callback],
+                $event->getData(),
+                $this->tokenStorage->getToken()->getUser()
+            );
         }
     }
-
-    public function afterPersist(RepositoryEvent $event)
-    {
-        $security = $this->getSecurity();
-        if ($security && array_key_exists('events', $security) && array_key_exists(self::AFTER_PERSIST, $security['events'])) {
-            $callback = $security['events'][self::AFTER_PERSIST];
-            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
-        }
-    }
-
-    public function beforeRemove(RepositoryEvent $event)
-    {
-        $security = $this->getSecurity();
-        if ($security && array_key_exists('events', $security) && array_key_exists(self::BEFORE_REMOVE, $security['events'])) {
-            $callback = $security['events'][self::BEFORE_REMOVE];
-            $event->getRepository()->$callback($event->getData(), $this->tokenStorage->getToken()->getUser());
-        }
-    }
-
 
     private function currentRoute(RouteCollection $routes, string $path, string $method):Route
     {
