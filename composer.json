@@ -21,6 +21,8 @@
     "MIT"
   ],
   "require" : {
+    "opstalent/apibundle": "dev-master",
+    "symfony/event-dispatcher": "^3.2"
   },
   "suggest": {
   },
