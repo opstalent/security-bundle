@@ -5,6 +5,7 @@ namespace Opstalent\SecurityBundle\EventSubscriber;
 use Opstalent\ApiBundle\Event\RepositoryEvents;
 use Opstalent\ApiBundle\Repository\BaseRepository;
 use Opstalent\ApiBundle\Event\RepositoryEvent;
+use Opstalent\ApiBundle\Event\RepositorySearchEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
@@ -36,7 +37,7 @@ class RepositorySubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function searchEventListener(RepositoryEvent $event)
+    public function searchEventListener(RepositorySearchEvent $event)
     {
         $security = $this->getSecurity();
         if (
@@ -45,7 +46,11 @@ class RepositorySubscriber implements EventSubscriberInterface
             && array_key_exists(RepositoryEvents::BEFORE_SEARCH_BY_FILTER, $security['events'])
         ) {
             $callback = $security['events'][RepositoryEvents::BEFORE_SEARCH_BY_FILTER];
-            call_user_func([$event->getRepository(), $callback], $this->tokenStorage->getToken()->getUser());
+            call_user_func(
+                [$event->getRepository(), $callback],
+                $this->tokenStorage->getToken()->getUser(),
+                $event
+            );
         }
     }
 
