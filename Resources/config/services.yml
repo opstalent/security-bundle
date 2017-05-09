@@ -12,5 +12,6 @@ services:
     arguments:
       - "@router"
       - "@security.token_storage"
+      - "@request_stack"
     tags:
       - { name: kernel.event_subscriber }

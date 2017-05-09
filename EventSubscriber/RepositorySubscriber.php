@@ -7,6 +7,7 @@ use Opstalent\ApiBundle\Repository\BaseRepository;
 use Opstalent\ApiBundle\Event\RepositoryEvent;
 use Opstalent\ApiBundle\Event\RepositorySearchEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,11 +20,13 @@ class RepositorySubscriber implements EventSubscriberInterface
 {
     protected $router;
     protected $tokenStorage;
+    protected $requestStack;
 
-    public function __construct(Router $router, TokenStorage $tokenStorage) // this is @service_container
+    public function __construct(Router $router, TokenStorage $tokenStorage, RequestStack $requestStack) // this is @service_container
     {
         $this->router = $router;
         $this->tokenStorage = $tokenStorage;
+        $this->requestStack = $requestStack;
     }
 
 
@@ -67,28 +70,9 @@ class RepositorySubscriber implements EventSubscriberInterface
         }
     }
 
-    private function currentRoute(RouteCollection $routes, string $path, string $method):Route
-    {
-        foreach ($routes as $route) {
-            if ($route->getPath() === $this->processPath($path) && $route->getMethods() == [$method]) return $route;
-        }
-        return $routes->get('root');
-    }
-
     private function getSecurity()
     {
-        $path = $this->router->getMatcher()->getContext()->getPathInfo();
-        $method = $this->router->getMatcher()->getContext()->getMethod();
-        $route = $this->currentRoute($this->router->getRouteCollection(), $path, $method);
+        $route = $this->router->getRouteCollection()->get($this->requestStack->getMasterRequest()->attributes->get("_route"));
         return $route->getOption('security');
-    }
-
-    private function processPath($path)
-    {
-        $parts = explode("/", $path);
-        if (count($parts) > 1 && intval(end($parts)) != 0) {
-            return str_replace(end($parts), "{id}", $path);
-        }
-        return $path;
     }
 }
