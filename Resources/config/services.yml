@@ -13,5 +13,7 @@ services:
       - "@router"
       - "@security.token_storage"
       - "@request_stack"
+      - "@doctrine.orm.entity_manager"
+      - '@service_container'
     tags:
       - { name: kernel.event_subscriber }

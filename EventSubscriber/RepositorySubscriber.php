@@ -2,15 +2,17 @@
 
 namespace Opstalent\SecurityBundle\EventSubscriber;
 
+use Doctrine\ORM\EntityManager;
 use Opstalent\ApiBundle\Event\RepositoryEvents;
 use Opstalent\ApiBundle\Repository\BaseRepository;
 use Opstalent\ApiBundle\Event\RepositoryEvent;
 use Opstalent\ApiBundle\Event\RepositorySearchEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Event\KernelEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Routing\RouteCollection;
@@ -21,12 +23,16 @@ class RepositorySubscriber implements EventSubscriberInterface
     protected $router;
     protected $tokenStorage;
     protected $requestStack;
+    protected $entityManager;
+    protected $container;
 
-    public function __construct(Router $router, TokenStorage $tokenStorage, RequestStack $requestStack) // this is @service_container
+    public function __construct(Router $router, TokenStorage $tokenStorage, RequestStack $requestStack, EntityManager $entityManager, ContainerInterface $container) // this is @service_container
     {
         $this->router = $router;
         $this->tokenStorage = $tokenStorage;
         $this->requestStack = $requestStack;
+        $this->entityManager = $entityManager;
+        $this->container = $container;
     }
 
 
@@ -37,6 +43,7 @@ class RepositorySubscriber implements EventSubscriberInterface
             RepositoryEvents::BEFORE_PERSIST => ['unitOfWorkEventListener', 255],
             RepositoryEvents::AFTER_PERSIST => ['unitOfWorkEventListener', 255],
             RepositoryEvents::BEFORE_REMOVE => ['unitOfWorkEventListener', 255],
+            KernelEvents::CONTROLLER => ['kernelControllerEventListener', -255],
         ];
     }
 
@@ -57,6 +64,19 @@ class RepositorySubscriber implements EventSubscriberInterface
         }
     }
 
+    public function kernelControllerEventListener(KernelEvent $event)
+    {
+        $security = $this->getSecurity();
+        if ($security && array_key_exists('events', $security) && array_key_exists(KernelEvents::CONTROLLER, $security['events'])) {
+            $callback = $security['events'][KernelEvents::CONTROLLER];
+            call_user_func(
+                [$this->container->get(substr($this->getOptionRepository(),1)), $callback],
+                $this->requestStack->getMasterRequest()->attributes->get('entity'),
+                $this->tokenStorage->getToken()->getUser()
+            );
+        }
+    }
+
     public function unitOfWorkEventListener(RepositoryEvent $event)
     {
         $security = $this->getSecurity();
@@ -72,7 +92,19 @@ class RepositorySubscriber implements EventSubscriberInterface
 
     private function getSecurity()
     {
-        $route = $this->router->getRouteCollection()->get($this->requestStack->getMasterRequest()->attributes->get("_route"));
+        $route = $this->getRoute();
         return $route->getOption('security');
+    }
+
+    private function getOptionRepository()
+    {
+        $route = $this->getRoute();
+        return $route->getOption('repository');
+    }
+
+
+    private function getRoute()
+    {
+        return $this->router->getRouteCollection()->get($this->requestStack->getMasterRequest()->attributes->get("_route"));
     }
 }
