@@ -2,9 +2,7 @@
 
 namespace Opstalent\SecurityBundle\EventSubscriber;
 
-use Doctrine\ORM\EntityManager;
 use Opstalent\ApiBundle\Event\RepositoryEvents;
-use Opstalent\ApiBundle\Repository\BaseRepository;
 use Opstalent\ApiBundle\Event\RepositoryEvent;
 use Opstalent\ApiBundle\Event\RepositorySearchEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -13,9 +11,7 @@ use Symfony\Component\HttpKernel\Event\KernelEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
-use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Route;
 
 class RepositorySubscriber implements EventSubscriberInterface
@@ -23,15 +19,13 @@ class RepositorySubscriber implements EventSubscriberInterface
     protected $router;
     protected $tokenStorage;
     protected $requestStack;
-    protected $entityManager;
     protected $container;
 
-    public function __construct(Router $router, TokenStorage $tokenStorage, RequestStack $requestStack, EntityManager $entityManager, ContainerInterface $container) // this is @service_container
+    public function __construct(Router $router, TokenStorage $tokenStorage, RequestStack $requestStack, ContainerInterface $container) // this is @service_container
     {
         $this->router = $router;
         $this->tokenStorage = $tokenStorage;
         $this->requestStack = $requestStack;
-        $this->entityManager = $entityManager;
         $this->container = $container;
     }
 
@@ -103,7 +97,10 @@ class RepositorySubscriber implements EventSubscriberInterface
     }
 
 
-    private function getRoute()
+    /**
+     * @return Route
+     */
+    private function getRoute() : Route
     {
         return $this->router->getRouteCollection()->get($this->requestStack->getMasterRequest()->attributes->get("_route"));
     }
