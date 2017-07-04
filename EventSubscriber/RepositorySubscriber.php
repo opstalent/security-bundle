@@ -37,6 +37,7 @@ class RepositorySubscriber implements EventSubscriberInterface
     {
         return [
             RepositoryEvents::BEFORE_SEARCH_BY_FILTER => ['searchEventListener', 255],
+            RepositoryEvents::AFTER_SEARCH_BY_FILTER => ['afterSearchEventListener', 255],
             RepositoryEvents::BEFORE_PERSIST => ['unitOfWorkEventListener', 255],
             RepositoryEvents::AFTER_PERSIST => ['unitOfWorkEventListener', 255],
             RepositoryEvents::BEFORE_REMOVE => ['unitOfWorkEventListener', 255],
@@ -57,6 +58,20 @@ class RepositorySubscriber implements EventSubscriberInterface
             $event,
         ]);
     }
+
+    public function afterSearchEventListener(RepositoryEvent $event )
+    {
+        try {
+            $callback = $this->getCallback(RepositoryEvents::AFTER_SEARCH_BY_FILTER);
+        } catch (RepositoryEventCallbackNotFoundException $e) {
+            return;
+        }
+        $this->call($event->getRepository(), $callback, [
+            $this->tokenStorage->getToken()->getUser(),
+            $event,
+        ]);
+    }
+
 
     public function kernelControllerEventListener(KernelEvent $event)
     {
