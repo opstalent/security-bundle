@@ -4,6 +4,7 @@ services:
     arguments:
       - "@router"
       - "@security.token_storage"
+      - "@security.role_hierarchy"
     tags:
       - { name: kernel.event_subscriber }
 

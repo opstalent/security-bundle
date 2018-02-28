@@ -8,17 +8,36 @@ use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\Role\RoleInterface;
 
+/**
+ * Class KernelControllerSubscriber
+ * @package Opstalent\SecurityBundle\EventSubscriber
+ */
 class KernelControllerSubscriber implements EventSubscriberInterface
 {
     protected $router;
     protected $tokenStorage;
+    /** @var RoleHierarchyInterface $roleHierarchy */
+    protected $roleHierarchy;
 
-    public function __construct(Router $router, TokenStorage $tokenStorage) // this is @service_container
+    /**
+     * KernelControllerSubscriber constructor.
+     * @param Router $router
+     * @param TokenStorage $tokenStorage
+     * @param RoleHierarchyInterface $roleHierarchy
+     */
+    public function __construct(
+        Router $router,
+        TokenStorage $tokenStorage,
+        RoleHierarchyInterface $roleHierarchy
+    )
+
     {
         $this->router = $router;
         $this->tokenStorage = $tokenStorage;
+        $this->roleHierarchy = $roleHierarchy;
     }
 
 
@@ -53,9 +72,9 @@ class KernelControllerSubscriber implements EventSubscriberInterface
         }
 
         if (
-            $this->tokenStorage->getToken()
+        $this->tokenStorage->getToken()
         ) {
-            return !empty(array_intersect($options['roles'], array_map([$this, "getRole"], $this->tokenStorage->getToken()->getRoles())));
+            return !empty(array_intersect($options['roles'], array_map([$this, "getRole"], $this->roleHierarchy->getReachableRoles($this->tokenStorage->getToken()->getRoles()))));
         }
 
         return false;
