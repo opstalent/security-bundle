@@ -21,7 +21,7 @@
     "MIT"
   ],
   "require" : {
-    "opstalent/apibundle": "dev-master",
+    "ops-talent/apibundle": "dev-master",
     "symfony/event-dispatcher": "^3.2",
     "symfony/form": "^3.2",
     "symfony/security": "^3.2"
