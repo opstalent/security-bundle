@@ -1,5 +1,5 @@
 {
-  "name" : "opstalent/securitybundle",
+  "name" : "ops-talent/securitybundle",
   "description" : "REST API security bundle compatible with opstalent/apibundle",
   "type" : "symfony-bundle",
   "authors" : [
